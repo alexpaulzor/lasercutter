@@ -181,7 +181,7 @@ bearing_ir = 4;
 bearing_or = 11;
 module bearing() {
     difference() {
-        cylinder(r=bearing_or, h=bearing_h, center=true);
+        cylinder(r=bearing_or, h=bearing_h, center=true, $fn=128);
         cylinder(r=bearing_ir, h=bearing_h*2, center=true);
     }
 }

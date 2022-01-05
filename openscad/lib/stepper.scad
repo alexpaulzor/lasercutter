@@ -166,7 +166,7 @@ Nema17 = [
                 [NemaRoundExtrusionDiameter, 22*mm], 
                 [NemaRoundExtrusionHeight, 1.9*mm], 
                 [NemaAxleDiameter, 5*mm], 
-                [NemaFrontAxleLength, 18*mm], 
+                [NemaFrontAxleLength, 24*mm], 
                 [NemaBackAxleLength, 15*mm],
                 [NemaAxleFlatDepth, 0.5*mm],
                 [NemaAxleFlatLengthFront, 15*mm],
