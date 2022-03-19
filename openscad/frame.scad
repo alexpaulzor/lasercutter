@@ -1,4 +1,5 @@
 include <lib/t20beam.scad>;
+include <lib/metric.scad>;
 // include <lib/motion_hardware.scad>;
 include <lib/stepper.scad>;
 use <lib/lib_pulley.scad>;
@@ -53,7 +54,7 @@ LEG_L = 70;
 roller_or = bearing_or + bearing_h/2;
 
 // TODO: mathematically compute 
-bearing_rail_offs = bearing_or + 2;
+bearing_rail_offs = bearing_or + 1;
 
 xstage_w = 65;
 xstage_h = 100;
@@ -65,6 +66,9 @@ stage_plate_gap = 25;
 
 corner_plate_th = 2;
 
+spacer_h = (stage_plate_gap - bearing_h) / 2;
+
+
 x_beam = BEAM_L + t20_w;
 y_beam = BEAM_L - stage_plate_gap;
 
@@ -73,6 +77,8 @@ max_x = 100;
 
 min_y = 50;
 max_y = 100;
+
+echo(spacer_h=spacer_h);
 
 function fn() = $preview ? 16 : 64;
 
@@ -113,6 +119,17 @@ module bushing68() {
 
 // ! bushing68();
 
+module spacer() {
+
+    // difference() {
+    //     cylinder(r=5, h=spacer_h, center=true, $fn=6);
+    //     cylinder(r=3, h=20, center=true, $fn=fn());
+    // }
+    m6_nut(core=true, h=spacer_h);
+}
+
+// ! spacer();
+
 module roller() {
     difference() {
         union() {
@@ -124,6 +141,9 @@ module roller() {
         }
         # bearing();
         # bushing68();
+        # for (dz=[-bearing_h/2 - spacer_h/2, bearing_h/2 + spacer_h/2])
+            translate([0, 0, dz])
+            spacer();
     }
 }
 
@@ -175,18 +195,9 @@ module xstage_plate_base_holes() {
                 ir=bearing_or + stage_plate_th, 
                 delta_or=bearing_h, 
                 mask_r=bearing_h-stage_plate_th);
-    translate([0, -10, -3/2*t20_w])
+    translate([0, -10, -25])
         rotate([90, 0, 0])
-        cylinder(r=20, h=20, center=true);
-    // # translate([-30, -30, 40])
-    //     rotate([0, -45, 0])
-    //     cube([60, 60, 60]);
-    // translate([30, -30, 40])
-    //     rotate([0, -27, 0])
-    //     cube([60, 60, 60]);
-    translate([-30, -15, 80])
-        rotate([90, 0, 0])
-        cylinder(r=40, h=20, center=true);
+        cylinder(r=25, h=20, center=true);
 }
 
 module xstage_plate_base() {
@@ -225,41 +236,41 @@ module xstage_motor_plate() {
 
 // ! xstage_motor_plate();
 
-module xstage_antimotor_plate() {
-   // difference() {
-   //      xstage_plate_base();
-   //      translate([0, stage_plate_gap/2 + stage_plate_th/2, 0])
-   //          xstage_plate_base_holes();
-   //      // xstage_center_mask();
-   //  } 
-    mirror([0, 1, 0])
-        xstage_motor_plate();
-}
+// module xstage_antimotor_plate() {
+//    // difference() {
+//    //      xstage_plate_base();
+//    //      translate([0, stage_plate_gap/2 + stage_plate_th/2, 0])
+//    //          xstage_plate_base_holes();
+//    //      // xstage_center_mask();
+//    //  } 
+//     mirror([0, 1, 0])
+//         xstage_motor_plate();
+// }
 
 // ! xstage_antimotor_plate();
 
-module xstage_center_motor_plate() {
-   difference() {
-        xstage_plate_base();
-        translate([0, stage_plate_gap/2 + stage_plate_th/2, 0])
-            xstage_plate_base_holes();
-        xstage_flush_mask();
-        xstage_center_motor_mask();
-    } 
-}
+// module xstage_center_motor_plate() {
+//    difference() {
+//         xstage_plate_base();
+//         translate([0, stage_plate_gap/2 + stage_plate_th/2, 0])
+//             xstage_plate_base_holes();
+//         xstage_flush_mask();
+//         xstage_center_motor_mask();
+//     } 
+// }
 
 // ! xstage_center_motor_plate();
 
-module xstage_bearing_mask() {
-    translate([0, 0, gantry_dz + t20_w/2])
-        cube([4*t20_w, t20_w, 55], center=true);
-    translate([30, -30, 15])
-        rotate([0, -50, 0])
-        cube([60, 60, 60]);
-    translate([-30, -30, 15])
-        rotate([0, -40, 0])
-        cube([60, 60, 60]);
-}
+// module xstage_bearing_mask() {
+//     translate([0, 0, gantry_dz + t20_w/2])
+//         cube([4*t20_w, t20_w, 55], center=true);
+//     translate([30, -30, 15])
+//         rotate([0, -50, 0])
+//         cube([60, 60, 60]);
+//     translate([-30, -30, 15])
+//         rotate([0, -40, 0])
+//         cube([60, 60, 60]);
+// }
 
 module xstage_bearing_plate() {
    difference() {
@@ -271,13 +282,13 @@ module xstage_bearing_plate() {
     } 
 }
 
-! xstage_bearing_plate();
+// ! xstage_bearing_plate();
 
 module xstage_motorside() {
     translate([0, -stage_plate_gap/2 - stage_plate_th/2, 0])
         xstage_motor_plate();
     translate([0, stage_plate_gap/2 + stage_plate_th/2, 0])    
-        xstage_center_motor_plate();
+        xstage_motor_plate();
 
     for (z=[bearing_rail_offs, -2*t20_w - bearing_rail_offs]) {
         for (x=[-xstage_w/2, xstage_w/2])
@@ -427,6 +438,34 @@ module corner_plate() {
 module pulley_20t() {
     gt2_pulley(20, 5, pulley_t_ht=9, pulley_b_ht=7, pulley_b_dia=16, no_of_nuts=0, nut_shaft_distance=3);
 }
+
+module laser_holes() {
+    for (dz=[10, 35, 60])
+        for (dx=[-xstage_w/2, xstage_w/2])
+        translate([dx, 0, dz])
+        rotate([90, 0, 0])
+        cylinder(r=5/2, h=20, center=true);
+    
+    for (dz=[10, 50])
+        for (dx=[-10, 10])
+        translate([dx, 0, dz])
+        rotate([90, 0, 0])
+        cylinder(r=3/2, h=20, center=true);
+    for (dz=[22, 34, 63])
+        translate([0, 0, dz])
+        rotate([90, 0, 0])
+        cylinder(r=3/2, h=20, center=true);
+}
+
+module laser_plate() {
+    difference() {
+        cube([xstage_plate_w, stage_plate_th, 70], center=true);
+        # translate([0, 0, -35])
+            laser_holes();
+    }
+}
+
+! laser_plate();
 
 // ! pulley_20t();
 

@@ -45,8 +45,8 @@ module m5_nut(core=false) {
 	m_nut(5/2, m5_nut_or, m5_nut_h+0.1, core);
 }
 
-module m6_nut(core=false) {
-	m_nut(6/2, m6_nut_or, m6_nut_h+0.1, core);
+module m6_nut(core=false, h=m6_nut_h) {
+	m_nut(6/2, m6_nut_or, h+0.1, core);
 }
 
 module m8_nut(core=false) {
