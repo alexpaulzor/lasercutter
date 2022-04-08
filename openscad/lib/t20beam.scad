@@ -64,3 +64,14 @@ module _t20_corner_hole() {
             cylinder(r=t20_corner_slot_w/2, h=t20_corner_hole_h);
     }
 }
+
+module v2040(l=100) {
+    translate([t20_w/2, 0, 0])
+        color("black")
+        t20(l);
+    translate([-t20_w/2, 0, 0])
+        color("black")
+        t20(l);
+}
+
+// ! v2040();

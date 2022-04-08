@@ -1,5 +1,6 @@
 include <metric.scad>;
-use <casting.scad>;
+use <helpers.scad>;
+use <lib_pulley.scad>;
 
 motor_short_c_c = 56;
 motor_short_offset = 0.9 * IN_MM;
@@ -87,6 +88,11 @@ module motor_driveshaft_holes(h=motor_ds_h) {
     cylinder(r=motor_ds_hole_ir, h=h);
 }
 
+module rail(length=100, r=4, $fn=$fn) {
+    rotate([0, 90, 0])
+        cylinder(r=r, h=length, $fn=$fn);
+}
+
 nema17_mount_flange_h = 3;
 nema17_mount_w = 50;
 nema17_mount_l = 50 + nema17_mount_flange_h;
@@ -107,28 +113,65 @@ nema17_collar_l = (
 nema17_collar_or = 20 / 2;
 nema17_l = 48;
 nema17_w = 43;
+nema17_screw_ir = 3.2/2;
+nema17_screw_c_c = 31;
 
-module nema17_mount() {
+module nema17_mount(reverse=1, shaft_l=22, shaft2_l=0, coupler=0) {
     difference() {
         union() {
             translate([0, -nema17_mount_w / 2, -nema17_mount_c_h]) {
                 cube([nema17_mount_flange_h, nema17_mount_w, nema17_mount_h]);
-                cube([nema17_mount_l, nema17_mount_w, nema17_mount_flange_h]);
+                translate([-nema17_mount_l/2+reverse*nema17_mount_l/2, 0, 0])
+                    cube([nema17_mount_l, nema17_mount_w, nema17_mount_flange_h]);
             }
-            translate([nema17_collar_l_offset, 0, 0])
-            rotate([0, 90, 0])
+            if (coupler)
+                translate([nema17_collar_l_offset, 0, 0])
+                rotate([0, 90, 0])
                 cylinder(r=nema17_collar_or, h=nema17_collar_l_coupler);
+            rail(shaft_l, r=2.5);
+            if (shaft2_l) {
+                rotate([0, 180, 0])
+                rail(shaft_l + nema17_l, r=2.5);
+            }
         }
-        shaft(nema17_mount_flange_h);
-        translate([(nema17_mount_l - nema17_slot_l)/2, nema17_mount_slot_c_c/2 - nema17_slot_w/2, -nema17_mount_c_h])
+        // shaft(nema17_mount_flange_h);
+        // rail(nema17_mount_flange_h);
+        translate([reverse*nema17_mount_l, 0, 0])
+            translate([(nema17_mount_l - nema17_slot_l)/2, nema17_mount_slot_c_c/2 - nema17_slot_w/2, -nema17_mount_c_h])
             cube([nema17_slot_l, nema17_slot_w, nema17_mount_flange_h]);
-        translate([(nema17_mount_l - nema17_slot_l)/2, -nema17_mount_slot_c_c/2 - nema17_slot_w/2, -nema17_mount_c_h])
+        translate([reverse*nema17_mount_l, 0, 0])
+            translate([(nema17_mount_l - nema17_slot_l)/2, -nema17_mount_slot_c_c/2 - nema17_slot_w/2, -nema17_mount_c_h])
             cube([nema17_slot_l, nema17_slot_w, nema17_mount_flange_h]);
-        rail(nema17_collar_l);
+        if (coupler)
+            rail(nema17_collar_l);
+       nema17_mount_holes();
     }
     % translate([-nema17_l, -nema17_w/2, -nema17_w/2])
         cube([nema17_l, nema17_w, nema17_w]);
 }
+
+module pulley_20t() {
+    gt2_pulley(20, 5, pulley_t_ht=9, pulley_b_ht=7, pulley_b_dia=16, no_of_nuts=0, nut_shaft_distance=3);
+}
+
+module nema17_mount_holes() {
+    for (y=[-1, 1])
+        for (z=[-1, 1])
+        translate([-15, y * nema17_screw_c_c/2, z * nema17_screw_c_c/2])
+        rail(30, r=nema17_screw_ir);
+    translate([-2, 0, 0])
+        rail(7, r=11.2, $fn=128);
+    translate([-15, 0, 0])
+        rail(30, r=6.5);
+    % translate([-nema17_l, -nema17_w/2, -nema17_w/2])
+        cube([nema17_l, nema17_w, nema17_w]);
+    % rotate([0, 90, 0])
+        pulley_20t();
+}
+
+// ! nema17_mount_holes();
+
+// ! nema17_mount(shaft2_l=22);
 
 nema23_mount_flange_h = 3;
 nema23_mount_w = 65;

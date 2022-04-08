@@ -1,117 +1,218 @@
 include <lib/t20beam.scad>
+include <lib/motors.scad>
+include <gantry_plate.scad>
+include <lib/helpers.scad>
+use <lib/lib_pulley.scad>
+include <lib/motion_hardware.scad>
+
+module v2040(l=100) {
+    translate([t20_w/2, 0, 0])
+        color("black")
+        t20(l);
+    translate([-t20_w/2, 0, 0])
+        color("black")
+        t20(l);
+}
+
+// ! v2040();
+
+BEAM_L = 1220;
+GANTRY_W = 1220;
 
 CUT_L = 1000;
 CUT_W = 500;
 
 
-module frame() {
-    translate([CUT_L/2, -t20_w/2, -t20_w/2])
-        rotate([0, 90, 0])
-        t20(CUT_L);
-    translate([-t20_w/2, CUT_W/2, -t20_w/2])
+TABLE_W = 18 * IN_MM; // TODO: measure
+TABLE_H = 24 * IN_MM; // TODO: measure
+TABLE_LIFT = 150;
+LEG_H = TABLE_LIFT - 3/2*t20_w;
+
+module tabletop() {
+    translate([-TABLE_W/2 + t20_w/2, 0, t20_w/2])
         rotate([90, 0, 0])
-        t20(CUT_W);
-    translate([CUT_L/2, CUT_W + t20_w/2, -t20_w/2])
-        rotate([0, 90, 0])
         t20(CUT_L);
-    translate([CUT_L + t20_w/2, CUT_W/2, -t20_w/2])
+    translate([TABLE_W/2 - t20_w/2, 0, t20_w/2])
         rotate([90, 0, 0])
-        t20(CUT_W);   
+        t20(CUT_L);
+
+    translate([0, -CUT_L/2 - t20_w/2, t20_w/2])
+        rotate([0, 90, 0])
+        t20(TABLE_W);
+    translate([0, CUT_L/2 + t20_w/2, t20_w/2])
+        rotate([0, 90, 0])
+        t20(TABLE_W);
+
+    translate([0, -CUT_L/2- 3*t20_w/2, TABLE_LIFT - t20_w/2])
+        rotate([0, 90, 0])
+        v2040(BEAM_L);
+    translate([0, CUT_L/2 + 3*t20_w/2, TABLE_LIFT - t20_w/2])
+        rotate([0, 90, 0])
+        v2040(BEAM_L);
+
+    translate([
+            TABLE_W/2 - t20_w/2, 
+            -CUT_L/2 - 3*t20_w/2, 
+            LEG_H/2])
+        t20(LEG_H);  
+    translate([
+            -TABLE_W/2 + t20_w/2, 
+            -CUT_L/2 - 3*t20_w/2, 
+            LEG_H/2])
+        t20(LEG_H);
+    translate([
+            TABLE_W/2 - t20_w/2, 
+            CUT_L/2 + 3*t20_w/2, 
+            LEG_H/2])
+        t20(LEG_H);
+    translate([
+            -TABLE_W/2 + t20_w/2, 
+            CUT_L/2 + 3*t20_w/2, 
+            LEG_H/2])
+        t20(LEG_H);
 }
 
-gplate_th = 3;
-gplate_w = 65.5;
-gplate_corner_r = 3;
-gwheel_clr = 2;
-gwheel_od = 25;
-gwheel_th = 7;
-// x, y, id, slot_w
-gplate_holes = [
-    [12.90, 5.05, 3, 15.85-9.35],
-        [32.75, 5.05, 3, 36-29.5],
-        [52.6, 5.05, 3, 56.15-49.65],
-    [12.90, 12.75, 7.20, 0],
-        [32.75, 12.75, 5, 42.75-22.75],
-        [52.6, 12.75, 5.10, 0],
-    [12.90, 22.75, 5.1, 0],
-        [32.75, 22.75, 5.1, 0],
-        [52.6, 22.75, 5.1, 0],
-    [12.90, 32.75, 7.20, 0],
-        [22.75, 32.75, 5.1, 0],
-        [32.75, 32.75, 5.1, 0],
-        [42.75, 32.75, 5.1, 0],
-        [52.6, 32.75, 5.1, 0],
-    [12.90, 42.75, 5.1, 0],
-        [32.75, 42.75, 5.1, 0],
-        [52.6, 42.75, 5.1, 0],
-    [12.90, 52.75, 7.20, 0],
-        [32.75, 52.75, 5, 42.75-22.75],
-        [52.6, 52.75, 5.1, 0],
-    [12.90, 60.45, 3, 15.85-9.35],
-        [32.75, 60.45, 3, 36-29.5],
-        [52.6, 60.45, 3, 56.15-49.65],
-];
+module table() {
+    translate([0, 0, -TABLE_H/2])
+    draft_cube(
+        [TABLE_W, TABLE_W, TABLE_H], 
+        center=true, draft_angle=-15, 
+        invert=true);
+}
 
-module gantry_plate() {
-    translate([-gplate_w/2, -gplate_w/2, -gplate_th/2])
+// ! table();
+
+// x_pos = 50; //CUT_L / 2;
+// y_pos = 50;
+
+cut_limit = CUT_W/2;
+// $t = 0.5;
+x_pos = cut_limit/2 * cos(360*$t);
+y_pos = cut_limit/2 * sin(360*$t);
+echo(x_pos=x_pos, y_pos=y_pos);
+
+module frame() {
+    translate([-t20_w - GANTRY_W/2, 0, 0])
+        rotate([0, 0, 0])
+        rotate([90, 0, 0])
+        v2040(BEAM_L);
+    translate([GANTRY_W/2 + t20_w, 0, 0])
+        rotate([0, 0, 0])
+        rotate([90, 0, 0])
+        v2040(BEAM_L);  
+}
+
+
+
+module gantry() {
+    translate([-GANTRY_W/2, 0, 0])
+        rotate([0, -90, 0])
+        gantry_assm();
+    translate([
+            GANTRY_W/2 - nema17_mount_flange_h, 
+            0, 
+            gplate_w/2 + nema17_mount_c_h + t20_w])
+        // rotate([0, 0, 0])
+            nema17_mount(reverse=-1, shaft2_l=30);
+    translate([GANTRY_W/2, 0, 0])
+        rotate([0, 90, 0])
+        gantry_assm();
+    translate([
+            0, -t20_w/2, 
+            gplate_w/2 + t20_w/2])
+        rotate([90, 0, 0])
+        rotate([0, 90, 0])
+        v2040(BEAM_L);
+
+    translate([
+            x_pos, -3*t20_w/2, 
+            gplate_w/2 +t20_w/2])
+        rotate([90, 0, 180])
+        gantry_assm();
+    % translate([0, 0, gplate_w/2 + t20_w + nema17_mount_c_h])
+        rotate([0, 90, 0])
+        cylinder(h=BEAM_L, r=4, center=true, $fn=20);
+    // % translate([0, 0, gplate_w/2 + t20_w + nema17_mount_c_h])
+    //     rotate([90, 0, 0])
+    //     kp08();
+    translate([300, 0, gplate_w/2 + nema17_mount_c_h + t20_w])
+        gantry_bearing_holder();
+    translate([-300, 0, gplate_w/2 + nema17_mount_c_h + t20_w])
+        gantry_bearing_holder();
+}
+
+// ! gantry();
+
+module bearing_cap() {
     difference() {
-        cube([gplate_w, gplate_w, gplate_th]);
-        /*
-        minkowski() {
-            translate([gplate_corner_r, gplate_corner_r, 0])
-            cube([
-                gplate_w - 2 * gplate_corner_r, 
-                gplate_w - 2 * gplate_corner_r, 
-                gplate_th]);
-            cylinder(r=3, h=0.1, center=true);
-        }  // */
-        for (holespec=gplate_holes) {
-            x = holespec[0];
-            y = holespec[1];
-            id = holespec[2];
-            w = holespec[3];
-            translate([x, y, 0]) {
-                translate([-w/2, 0, 0])
-                    cylinder(r=id/2, h=3*gplate_th, center=true);
-                if (w > 0) {
-                    translate([w/2, 0, 0])
-                        cylinder(r=id/2, h=3*gplate_th, center=true);
-                    cube([w, id, 3*gplate_th], center=true);
-                }
-            }
-        }
+        translate([5, 0, 0])
+            cube([4, 42, 42], center=true);
+        // nema17_mount(shaft2_l=22);
+        nema17_mount_holes();
     }
 }
 
-//! gantry_plate();
+// ! bearing_cap();
 
-module gwheel() {
-    cylinder(r=gwheel_od/2, h=gwheel_th, center=true);
-}
-
-module gantry_assm() {
-    % translate([0, -t20_w/2, t20_w/2])
-        rotate([0, 90, 0])
+module gantry_bearing_holder() {
+    % translate([0, t20_w + 5 + 2, -nema17_mount_c_h + 10])
         t20(100);
-    translate([
-        0, -t20_w/2, -gplate_th/2 + -gwheel_clr])
-        gantry_plate();
-    # translate([0, 0, 0])
-        gwheel();
-    
+    difference() {
+        union() {
+            translate([
+                    -t20_w/2, 
+                    t20_w/2 + 5, 
+                    -nema17_mount_c_h -t20_w*2])
+                cube([t20_w, 2, 100]);
+            translate([
+                    -t20_w/2, t20_w/2, 
+                    -nema17_mount_c_h -t20_w*2])
+                cube([t20_w, 5, 2*t20_w]);
+        }
+        translate([0, 0, -nema17_mount_c_h -3*t20_w/2])
+            rotate([90, 0, 0])
+            cylinder(r=5/2, h=20, center=true);
+        translate([0, 0, -nema17_mount_c_h -t20_w/2])
+            rotate([90, 0, 0])
+            cylinder(r=5/2, h=20, center=true);
+
+        *% translate([
+                200/2 - nema17_mount_flange_h, 
+                0, 
+                0])
+            rotate([0, 0, 0])
+                nema17_mount(reverse=-1, shaft2_l=30);
+        
+        rotate([0, 90, 0])
+            cylinder(h=200, r=4, center=true, $fn=20);
+        rotate([90, 0, 0]) {
+            # kp08();
+            translate([0, 0, -10])
+                kp08_holes(h=20);
+        }
+        % translate([
+                0, -t20_w/2, 
+                -gplate_w/2*0 - nema17_mount_c_h -t20_w/2])
+            rotate([90, 0, 0])
+            rotate([0, 90, 0])
+            v2040(200);
+
+        // # translate([0, 0, t20_w + nema17_mount_c_h])
+        //     rotate([90, 0, 0])
+            
+    }
 }
 
-! gantry_assm();
-
-module gantry() {
-    translate([gplate_w/2, 0, 0])
-        rotate([90, 0, 0])
-        gantry_assm();
-}
+// ! gantry_bearing_holder();
 
 module design() {
+    % translate([0, 0, -TABLE_LIFT]) {
+        table();
+        tabletop();
+    }
     frame();
-    gantry();
+    translate([0, y_pos, 0])
+        gantry();
 }
 
 design();
